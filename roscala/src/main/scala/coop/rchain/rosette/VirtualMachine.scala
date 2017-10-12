@@ -34,6 +34,9 @@ object VirtualMachine {
     Ob.NIV
   )
 
+  def handleVirtualMachineError(state: VMState): Ob =
+    state.ctxt.vmError(state)
+
   def getNextStrand(state: VMState): (Boolean, VMState) =
     if (state.strandPool.isEmpty) {
       tryAwakeSleepingStrand(state) match {
@@ -569,7 +572,7 @@ object VirtualMachine {
     val env = (1 to level).foldLeft(state.ctxt.env)((env, _) => env.parent)
 
     val slot = if (op.i) {
-      val actor = Actor(env)
+      val actor = new Actor { override val extension: Ob = env }
       actor.extension.slot
     } else {
       env.slot
@@ -584,7 +587,7 @@ object VirtualMachine {
     val env = (1 to level).foldLeft(state.ctxt.env)((env, _) => env.parent)
 
     val slot = if (op.i) {
-      val actor = Actor(env)
+      val actor = new Actor { override val extension: Ob = env }
       actor.extension.slot
     } else {
       env.slot
