@@ -1,25 +1,71 @@
-language: scala
-scala:
-  - 2.12.4
-sbt_args: -no-colors
 dist: trusty
-env:
-  - SUBPROJECT=comm
-  - SUBPROJECT=rholang
-  - SUBPROJECT=roscala
-  - SUBPROJECT=rosette
-  - SUBPROJECT=storage
-script: ./scripts/build-subproject.sh
 sudo: required
-install: ./scripts/install.sh
+
+matrix:
+  include:
+    
+    #comm; roscala; storage
+    - language: scala
+      scala: 2.12.4
+      sbt_args: -no-colors
+
+      env:
+        - TEST_DIR=comm
+        - TEST_DIR=roscala
+        - TEST_DIR=storage
+
+      script:
+        - cd $TEST_DIR && sbt test
+
+
+    #rosette
+    - language: cpp
+      compiler: gcc
+
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+            - cmake
+
+      env:
+        - TEST_DIR=rosette
+
+      before_install: cd $TEST_DIR
+      
+      #install: cd ./install.sh
+      script: cd ./build.sh
+
+
+    #rholang
+    - language: scala
+      scala: 2.12.4
+      sbt_args: -no-colors
+
+
+      env:
+        - TEST_DIR=rholang
+
+      before_install: cd $TEST_DIR
+
+      install: ./install.sh
+
+      script: ./test.sh
+
+        
 cache:
   directories:
     - "$HOME/.ivy2/cache"
     - "$HOME/.sbt"
+
+
 notifications:
   email:
     recipients:
       - rchain-makers@pyrofex.net
     on_success: never
-    on_failure: always
+    on_failure: never
 
