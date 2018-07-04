@@ -1,4 +1,5 @@
 /* Mode: -*- C++ -*- */
+// vim: set ai ts=4 sw=4 expandtab
 /* @BC
  *		                Copyright (c) 1993
  *	    by Microelectronics and Computer Technology Corporation (MCC)
@@ -16,168 +17,151 @@
  *	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/*
- * $Header$
- *
- * $Log$
- *
- @EC */
-
 #if !defined(_RBL_Atom_h)
 #define _RBL_Atom_h
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include "rosette.h"
-
 #include "Ob.h"
 
-class RblAtom : public Ob
-{
-  protected:
+// The RblAtom derived objects actually store the value of the object within
+// the pointer. This allows them to be passed around as a pointer to an object,
+// but still only consume the memory of one pointer. These are in essence pseudo
+// pointers. They look like pointers to an object, but when accessed, some slight
+// of hand comes into play to get access to the value of the object without actually
+// dereferencing it as a pointer.
+//
+// During startup, Rosette instantiates one global instance of each type of RblAtom
+// derived classes. See MODULE_INIT() in RblAtom.cc. When a pOb to 
+// one of these classes is required, the BASE() function calls decodeAtom() which then
+// extracts the value from the supplied pOb pseudo pointer, assigns the value into the
+// cooresponding global instance "atom" member variable and returns the pointer to the global
+// instance. Rosette code must be careful to only use this pointer temporarily, and 
+// especially not call BASE() on any other pOb of the same type. Typical use is to call
+// a member function to do such things as print out the value.
 
-    Ob*		atom;
 
-    RblAtom (int, Ob*, Ob*);
+// To summarize, the slight of hand works like this:
+//  1. At startup, allocate a single global instance of each of the classes derived from RblAtom.
+//  2. When a pOb of one of the classes derived from RblAtom is accessed using
+//     BASE(), the pointer is passed into decodeAtom() which then determines the
+//     type of the object, and assigns the pointer into the "atom" member variable of the
+//     corresponding global instance for its type.
+//  3. The pointer to the global instance is then returned.
+//  4. When an accessor method is called, the data is retrieved from the "atom" member variable.
 
-    friend Ob*	decodeAtom (Ob*);
+class RblAtom : public Ob {
+   protected:
+    Ob* atom;
 
-  public:
+    friend Ob* decodeAtom(Ob*);
 
-    virtual Ob*	self ();
-    virtual Ob*	cloneTo (Ob*, Ob*);
-    virtual Ob*	update (bool, Ctxt*);
-    virtual pOb primitiveInitialize (pCtxt);
-    virtual bool coversp (pOb);
+   public:
+    RblAtom(int, Ob*, Ob*);
+
+    virtual Ob* self();
+    virtual Ob* cloneTo(Ob*, Ob*);
+    virtual Ob* update(bool, Ctxt*);
+    virtual pOb primitiveInitialize(pCtxt);
+    virtual bool coversp(pOb);
 };
 
 
-class Symbol : public RblAtom
-{
+class Symbol : public RblAtom {
     STD_DECLS(Symbol);
 
-  protected:
+   public:
+    Symbol();
 
-    Symbol ();
+    static Symbol* create();
 
-  public:
-
-    static Symbol*	create ();
-
-    bool	ConstantP ();
-    void	printOn (FILE*);
-    void	printQuotedOn (FILE*);
-    void	displayOn (FILE*);
-    const char*	asCstring ();
-    char*	asPathname ();
-    Pattern*	makePattern ();
-    AttrNode*	makeAttrNode (bool valueCtxt);
-    Ob*		unquote ();
+    bool ConstantP();
+    void printOn(FILE*);
+    void printQuotedOn(FILE*);
+    void displayOn(FILE*);
+    const char* asCstring();
+    char* asPathname();
+    Pattern* makePattern();
+    AttrNode* makeAttrNode(bool valueCtxt);
+    Ob* unquote();
 };
 
 
-class RblBool : public RblAtom
-{
+class RblBool : public RblAtom {
     STD_DECLS(RblBool);
 
-  protected:
+   public:
+    RblBool();
 
-    RblBool ();
+    static RblBool* create();
+    const char* asCstring();
 
-  public:
-
-    static RblBool*	create ();
-    const char*		asCstring ();
-
-    virtual convertArgReturnPair  convertActualArg(Ctxt*, Ob*);
-    //virtual Ob*         convertActualRslt(Ctxt*, Word32);
+    virtual convertArgReturnPair convertActualArg(Ctxt*, Ob*);
+    // virtual Ob*         convertActualRslt(Ctxt*, uint32_t);
 };
 
-class Char : public RblAtom
-{
+class Char : public RblAtom {
     STD_DECLS(Char);
 
-  protected:
+   public:
+    Char();
 
-    Char ();
-
-  public:
-
-    static Char*	create ();
-    void		printOn (FILE*);
-    void		displayOn (FILE*);
-    char*		asCstring ();
+    static Char* create();
+    void printOn(FILE*);
+    void displayOn(FILE*);
+    const char* asCstring();
 };
 
 
 static const int FixnumFormatSize = 16;
 
-class Fixnum : public RblAtom
-{
+class Fixnum : public RblAtom {
     STD_DECLS(Fixnum);
 
-  protected:
+   public:
+    Fixnum();
 
-    Fixnum ();
-
-    static char format [FixnumFormatSize];
+    static char format[FixnumFormatSize];
     friend BUILTIN_PRIM(fxFormat);
 
-  public:
+    static Fixnum* create();
+    const char* asCstring();
 
-    static Fixnum*	create ();
-    char* 		asCstring ();
-
-    virtual convertArgReturnPair  convertActualArg(Ctxt*, Ob*);
-    virtual Ob* convertActualRslt(Ctxt*, Word32);
+    virtual convertArgReturnPair convertActualArg(Ctxt*, Ob*);
+    virtual Ob* convertActualRslt(Ctxt*, uint32_t);
 };
 
 
-class Niv : public RblAtom
-{
+class Niv : public RblAtom {
     STD_DECLS(Niv);
 
-  protected:
+   public:
+    Niv();
 
-    Niv ();
-
-  public:
-
-    static Niv*	create ();
-    char*	asCstring ();
-    Ob*		invoke (Ctxt*);
+    static Niv* create();
+    const char* asCstring();
+    Ob* invoke(Ctxt*);
 };
 
 
-class Sysval : public RblAtom
-{
+class Sysval : public RblAtom {
     STD_DECLS(Sysval);
 
-  protected:
+   public:
+    Sysval();
 
-    Sysval ();
-
-  public:
-
-    static Sysval*	create ();
-    char*		asCstring ();
+    static Sysval* create();
+    const char* asCstring();
 };
 
 
-class ExpandedLocation : public RblAtom
-{
+class ExpandedLocation : public RblAtom {
     STD_DECLS(ExpandedLocation);
 
-  protected:
+   public:
+    ExpandedLocation();
 
-    ExpandedLocation ();
-
-  public:
-
-    static ExpandedLocation*	create ();
-    char*			asCstring ();
+    static ExpandedLocation* create();
+    const char* asCstring();
 };
 
 #endif
