@@ -639,6 +639,7 @@ class EnabledSpec extends VmSpecUtils {
       fifo.mbox = new EmptyMbox
     }
 
+    // TODO: Make this test run in multi-threaded mode
     "Removing a method from the enabled set" should
       "result in not processing corresponding messages anymore" inMode [SimpleStrandPool] {
 

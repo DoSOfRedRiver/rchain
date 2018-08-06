@@ -8,7 +8,6 @@ import coop.rchain.roscala.Vm.State
 import coop.rchain.roscala.ob._
 import coop.rchain.roscala.pools.{StrandPool, StrandPoolExecutor}
 import coop.rchain.roscala.prim.Prim
-import coop.rchain.roscala.util.misc.indent
 
 object Vm {
 
@@ -37,7 +36,8 @@ object Vm {
 }
 
 class Vm(val ctxt0: Ctxt, val state0: State) extends RecursiveAction {
-  val logger = Logger("Vm")
+  val logger              = Logger("Vm")
+  val opcodePrettyPrinter = new OpcodePrettyPrinter()
 
   override def compute(): Unit = run(ctxt0, state0)
 
@@ -49,8 +49,6 @@ class Vm(val ctxt0: Ctxt, val state0: State) extends RecursiveAction {
     * Also tries to fetch new work from `state.strandPool`
     */
   private def run(ctxt: Ctxt, state: State): Unit = {
-    var debugIndent = 0
-
     // Install `ctxt`
     state.ctxt = ctxt
     state.code = ctxt.code
@@ -60,8 +58,7 @@ class Vm(val ctxt0: Ctxt, val state0: State) extends RecursiveAction {
       val opcode = state.code.codevec(state.pc)
 
       // Indented debug output
-      logger.debug(("  " * debugIndent) + state.pc + ": " + opcode.toString)
-      debugIndent = indent(debugIndent, opcode)
+      logger.debug(opcodePrettyPrinter.print(state.pc, opcode))
 
       state.pc += 1
 
