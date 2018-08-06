@@ -23,10 +23,10 @@ class ActorSpec extends VmSpecUtils {
           * (defOprn increase)
           *
           * (defActor Foo (slots& i 0)
-          * (method (increase amount)
-          * (update i (+ i amount))
-          * ['i i]
-          * )
+          *   (method (increase amount)
+          *     (update i (+ i amount))
+          *     ['i i]
+          *   )
           * )
           *
           * (define foo (new Foo))
@@ -55,26 +55,26 @@ class ActorSpec extends VmSpecUtils {
         /** `increase amount` method
           *
           * litvec:
-          * 0:   {StdMthd}
-          * 1:   {Template}
-          * 2:   'i
+          *   0:   {StdMthd}
+          *   1:   {Template}
+          *   2:   'i
           * codevec:
-          * 0:   extend 1
-          * 1:   fork 12
-          * 2:   alloc 2
-          * 3:   liti 2,arg[0]
-          * 4:   outstanding 17,1
-          * 6:   push/alloc 2
-          * 7:   xfer lex[1,(0)],arg[0]
-          * 8:   xfer lex[0,1],arg[1]
-          * 9:   xfer global[+],trgt
-          * 11:   xmit/nxt 2,arg[1]
-          * 12:   alloc 2
-          * 13:   liti 2,arg[0]
-          * 14:   xfer lex[1,(0)],arg[1]
-          * 15:   xfer argvec,rslt
-          * 16:   rtn/nxt
-          * 17:   update!/nxt 2
+          *   0:   extend 1
+          *   1:   fork 12
+          *   2:   alloc 2
+          *   3:   liti 2,arg[0]
+          *   4:   outstanding 17,1
+          *   6:   push/alloc 2
+          *   7:   xfer lex[1,(0)],arg[0]
+          *   8:   xfer lex[0,1],arg[1]
+          *   9:   xfer global[+],trgt
+          *   11:  xmit/nxt 2,arg[1]
+          *   12:  alloc 2
+          *   13:  liti 2,arg[0]
+          *   14:  xfer lex[1,(0)],arg[1]
+          *   15:  xfer argvec,rslt
+          *   16:  rtn/nxt
+          *   17:  update!/nxt 2
           *
           * See explanation for opcodes in `increaseMthdCode`.
           *
@@ -163,9 +163,9 @@ class ActorSpec extends VmSpecUtils {
           * (defOprn returnOne)
           *
           * (defActor Foo
-          * (method (returnOne)
-          * 1
-          * )
+          *   (method (returnOne)
+          *     1
+          *   )
           * )
           *
           * (define foo (new Foo))
@@ -200,12 +200,12 @@ class ActorSpec extends VmSpecUtils {
         /** `returnOne` method
           *
           * litvec:
-          * 0:   {StdMthd}
-          * 1:   {Template}
+          *   0:   {StdMthd}
+          *   1:   {Template}
           * codevec:
-          * 0:   extend 1
-          * 1:   lit 1,rslt
-          * 2:   rtn/nxt
+          *   0:   extend 1
+          *   1:   lit 1,rslt
+          *   2:   rtn/nxt
           */
         val returnOneMthdCode = Code(
           litvec = Seq(Niv, template),
@@ -254,19 +254,19 @@ class ActorSpec extends VmSpecUtils {
         * will run and increase `i` by `2`.
         *
         * litvec:
-        * 0:   {BlockExpr}
+        *   0:   {BlockExpr}
         * codevec:
-        * 0:   fork 8
-        * 1:   alloc 2
-        * 2:   xfer global[foo],arg[0]
-        * 4:   lit 1,arg[1]
-        * 5:   xfer global[increase],trgt
-        * 7:   xmit/nxt 2
-        * 8:   alloc 2
-        * 9:   xfer global[foo],arg[0]
-        * 11:   lit 2,arg[1]
-        * 12:   xfer global[increase],trgt
-        * 14:   xmit/nxt 2
+        *   0:   fork 8
+        *   1:   alloc 2
+        *   2:   xfer global[foo],arg[0]
+        *   4:   lit 1,arg[1]
+        *   5:   xfer global[increase],trgt
+        *   7:   xmit/nxt 2
+        *   8:   alloc 2
+        *   9:   xfer global[foo],arg[0]
+        *   11:  lit 2,arg[1]
+        *   12:  xfer global[increase],trgt
+        *   14:  xmit/nxt 2
         *
         */
       val fixture                   = defineActor
@@ -304,9 +304,9 @@ class ActorSpec extends VmSpecUtils {
         * (defOprn returnOne)
         *
         * (defActor Foo
-        * (method (returnOne)
-        * 1
-        * )
+        *   (method (returnOne)
+        *     1
+        *   )
         * )
         *
         * (define foo (new Foo))
@@ -342,11 +342,13 @@ class ActorSpec extends VmSpecUtils {
         * `QueueMbox`.
         *
         * (defOprn returnOne)
+        *
         * (defActor Foo
-        * (method (returnOne)
-        * 1
+        *   (method (returnOne)
+        *     1
+        *   )
         * )
-        * )
+        *
         * (define foo (new Foo))
         *
         * `mbox` gets locked and `returnOne` method gets invoked when
@@ -390,22 +392,24 @@ class ActorSpec extends VmSpecUtils {
         * a `Mthd` that schedules a `Ctxt` that returns `1`.
         *
         * (defOprn returnOne)
+        *
         * (defActor Foo
-        * (method (returnOne)
-        * 1
+        *   (method (returnOne)
+        *     1
+        *   )
         * )
-        * )
+        *
         * (define foo (new Foo))
         *
         * (returnOne foo)
         *
         * litvec:
-        * 0:   {RequestExpr}
+        *   0:   {RequestExpr}
         * codevec:
-        * 0:   alloc 1
-        * 1:   xfer global[foo],arg[0]
-        * 3:   xfer global[returnOne],trgt
-        * 5:   xmit/nxt 1
+        *   0:   alloc 1
+        *   1:   xfer global[foo],arg[0]
+        *   3:   xfer global[returnOne],trgt
+        *   5:   xmit/nxt 1
         *
         * In `xmit/nxt 1` the VM calls `dispatch` on the `returnOne`
         * operation which will call `lookupAndInvoke` on `foo`.
