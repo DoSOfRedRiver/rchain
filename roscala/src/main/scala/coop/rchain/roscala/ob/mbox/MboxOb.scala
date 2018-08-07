@@ -7,7 +7,7 @@ import coop.rchain.roscala.ob.{Ctxt, Ob}
 class MboxOb extends Ob {
   var mbox: Ob = MboxOb.LockedMbox
 
-  def receive(ctxt: Ctxt, state: State): Ob = {
+  def receive(ctxt: Ctxt, state: State): Ob = this.synchronized {
     ctxt.rcvr = this
     mbox.receiveMsg(this, ctxt, state)
   }

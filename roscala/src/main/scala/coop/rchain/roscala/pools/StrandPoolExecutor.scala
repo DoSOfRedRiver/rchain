@@ -37,7 +37,9 @@ object StrandPoolExecutor {
         * All methods that accept timeout parameters treat values less than or equal to zero to mean not to wait at all.
         * To wait "forever", you can use a value of Long.MAX_VALUE.
         */
-      executor.awaitQuiescence(Long.MaxValue, TimeUnit.MILLISECONDS)
+      //executor.awaitQuiescence(Long.MaxValue, TimeUnit.MILLISECONDS)
+      executor.shutdown()
+      executor.awaitTermination(Long.MaxValue, TimeUnit.MILLISECONDS)
     }
 
     override def instance = pool

@@ -641,7 +641,7 @@ class EnabledSpec extends VmSpecUtils {
 
     // TODO: Make this test run in multi-threaded mode
     "Removing a method from the enabled set" should
-      "result in not processing corresponding messages anymore" inMode [SimpleStrandPool] {
+      "result in not processing corresponding messages anymore" inMultimode {
 
       /** (seq (enq fifo 1) (enq fifo 2) (enq fifo 3) (enq fifo 4))
         *

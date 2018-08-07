@@ -6,7 +6,7 @@ import coop.rchain.roscala._
 import coop.rchain.roscala.ob._
 import coop.rchain.roscala.ob.expr.TupleExpr
 import coop.rchain.roscala.ob.mbox.{EmptyMbox, MboxOb, QueueMbox}
-import coop.rchain.roscala.pools.{SimpleStrandPool, StrandPoolExecutor}
+import coop.rchain.roscala.pools.{ParallelStrandPool, StrandPoolExecutor}
 import coop.rchain.roscala.util.misc.{createGlobalEnv, SymbolOffsets, SymbolOps}
 import coop.rchain.roscala.prim.fixnum.fxPlus
 import coop.rchain.roscala.prim.rblfloat.flPlus
@@ -226,7 +226,7 @@ class ActorSpec extends VmSpecUtils {
         foo.mbox = new EmptyMbox
       }
 
-    "(block (increase foo 1) (increase foo 2))" should "increase value by 3" inMode [SimpleStrandPool] {
+    "(block (increase foo 1) (increase foo 2))" should "increase value by 3" inMode [ParallelStrandPool] {
 
       /** Testing `QueueMbox`
         *

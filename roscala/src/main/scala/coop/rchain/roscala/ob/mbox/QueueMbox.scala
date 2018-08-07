@@ -28,7 +28,7 @@ class QueueMbox(var enabledSet: Ob, val queue: MboxQueue) extends Ob {
     * from the `MboxQueue` which then gets scheduled.
     */
   override def nextMsg(client: MboxOb, newEnabledSet: Ob, state: State): Ob = {
-    MboxOb.logger.debug(s"Next message received on $this")
+    MboxOb.logger.debug(s"Process next message from queue in $this")
 
     if (!isLocked) {
       MboxOb.logger.warn("Next message received on unlocked mailbox")
