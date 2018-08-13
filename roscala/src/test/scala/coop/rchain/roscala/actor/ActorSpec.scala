@@ -226,7 +226,7 @@ class ActorSpec extends VmSpecUtils {
         foo.mbox = new EmptyMbox
       }
 
-    "(block (increase foo 1) (increase foo 2))" should "increase value by 3" inMode [ParallelStrandPool] {
+    "(block (increase foo 1) (increase foo 2))" should "increase value by 3" inMultimode {
 
       /** Testing `QueueMbox`
         *
