@@ -1,12 +1,7 @@
 package coop.rchain.comm
 
-import java.net.{DatagramPacket, DatagramSocket}
-import scala.util.{Failure, Success, Try}
-
-sealed trait DatagramError extends Throwable
-case class DatagramOverflow(size: Int) extends DatagramError
-case class DatagramUnderflow(size: Int) extends DatagramError
-case class DatagramFramingError(size: Int) extends DatagramError
+import java.net.{DatagramPacket, DatagramSocket, SocketAddress}
+import scala.util.control.NonFatal
 
 /**
   * Implement the Comm protocol for unicast (point-to-point) datagram
@@ -23,16 +18,15 @@ case class DatagramFramingError(size: Int) extends DatagramError
   * (`local`) be given; this supplies the source data for datagrams it
   * sends.
   */
-case class UnicastComm(local: PeerNode) extends Comm {
-  val receiver = new DatagramSocket(local.endpoint.udpPort)
-  val sender = new DatagramSocket()
+case class UnicastComm(local: PeerNode) extends Comm[SocketAddress] {
+  val socket = new DatagramSocket(local.endpoint.udpPort)
 
   /*
    * Timeout for recv() calls; might need to be adjusted lower. This
    * is unrelated to timeout configurable for round-trip messages in a
    * ProtocolHandler.
    */
-  receiver.setSoTimeout(500) // 500 ms
+  socket.setSoTimeout(500) // 500 ms
 
   val recv_buffer = new Array[Byte](65508)
   val recv_dgram = new DatagramPacket(recv_buffer, recv_buffer.size)
@@ -44,10 +38,10 @@ case class UnicastComm(local: PeerNode) extends Comm {
    * bytes of the dgram payload.
    */
 
-  private def encode(data: Seq[Byte]): Either[DatagramError, Array[Byte]] = {
+  private def encode(data: Seq[Byte]): Either[CommError, Array[Byte]] = {
     val sz = data.size
     if (sz > 65506) {
-      Left(DatagramOverflow(sz))
+      Left(DatagramSizeError(sz))
     } else {
       val payload = new Array[Byte](2 + sz)
       payload(0) = (sz >> 8).toByte
@@ -57,48 +51,47 @@ case class UnicastComm(local: PeerNode) extends Comm {
     }
   }
 
-  private def decode(data: Array[Byte]): Either[DatagramError, Seq[Byte]] =
+  private def decode(data: Array[Byte]): Either[CommError, Seq[Byte]] =
     if (data.size < 2) {
-      Left(DatagramUnderflow(data.size))
+      Left(DatagramSizeError(data.size))
     } else {
-      val sz = ((data(0) << 8) & 0xff00) | (data(1) & 0xff)
-      if (0 < sz && sz <= 65506) {
-        Right(data.slice(2, sz + 2))
-      } else {
-        Left(DatagramFramingError(sz))
+      (((data(0) << 8) & 0xff00) | (data(1) & 0xff)) match {
+        case sz if (sz < 0 || 65506 < sz) => Left(DatagramSizeError(sz))
+        case sz                           => Right(data.slice(2, sz + 2))
       }
     }
 
   /**
     * Receive a datagram.
     *
-    * This method returns a @scala.util.Try, which may contain an
-    * exception if the underlying socket receive
-    * throws. See @java.net.DatagramSocket.receive.
+    * Returns `Right` with the bytes read from the socket or Left with
+    * an error, if something went wrong.
     */
-  override def recv: Try[Seq[Byte]] =
-    Try {
-      receiver.receive(recv_dgram)
+  override def recv: Either[CommError, (SocketAddress, Seq[Byte])] =
+    try {
+      socket.receive(recv_dgram)
       decode(recv_dgram.getData) match {
-        case Right(bytes) => bytes
-        case Left(err)    => throw(err)
+        case Right(data) => Right((recv_dgram.getSocketAddress, data))
+        case Left(err)   => Left(err)
       }
+    } catch {
+      case NonFatal(ex: Exception) => Left(DatagramException(ex))
     }
 
   /**
     * Send data to a peer.
     *
-    * Return Success(true) if no exception occurred, otherwise return
-    * the exception in a @scala.util.Try. See
-    * @java.net.DatagramSocket.send for a list of possible exceptions.
+    * Returns `Right` with `true`, if no error was detected.
+    * Otherwise, returns `Left` with the error.
     */
-  override def send(data: Seq[Byte], peer: PeerNode): Try[Unit] =
-    encode(data) match {
-      case Right(payload) => {
-        println(s"COMM Sending to ${peer.endpoint.udpSocketAddress}")
-        val dgram = new DatagramPacket(payload, 0, payload.size, peer.endpoint.udpSocketAddress)
-        Try(sender.send(dgram))
+  override def send(data: Seq[Byte], peer: PeerNode): Either[CommError, Unit] =
+    encode(data).flatMap { payload =>
+      val dgram = new DatagramPacket(payload, 0, payload.size, peer.endpoint.udpSocketAddress)
+      try {
+        socket.send(dgram)
+        Right(())
+      } catch {
+        case NonFatal(ex: Exception) => Left(DatagramException(ex))
       }
-      case Left(err) => Failure(err)
     }
 }
