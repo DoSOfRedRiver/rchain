@@ -90,7 +90,7 @@ class TomlConfigurationSpec extends FunSuite with Matchers {
     root.validators.flatMap(_.bondsFile) shouldEqual Some("/validator/bonds")
     root.validators.flatMap(_.known) shouldEqual Some("v1")
     root.validators.flatMap(_.publicKey) shouldEqual Some("88888")
-    root.validators.flatMap(_.privateKey) shouldEqual Some("99999")
+    root.validators.flatMap(_.privateKeyPath) shouldEqual Some("99999")
     root.validators.flatMap(_.sigAlgorithm) shouldEqual Some("ed25519")
     root.validators.flatMap(_.walletsFile) shouldEqual Some("/validator/wallet")
     root.validators.flatMap(_.requiredSigs) shouldEqual Some(1)

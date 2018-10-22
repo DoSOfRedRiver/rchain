@@ -48,7 +48,7 @@ case class Validators(
     bondsFile: Option[String],
     known: Option[String],
     publicKey: Option[String],
-    privateKey: Option[String],
+    privateKeyPath: Option[Path],
     sigAlgorithm: Option[String],
     walletsFile: Option[String],
     minimumBond: Option[Long],
